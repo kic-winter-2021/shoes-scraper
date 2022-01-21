@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 """
 Created on Mon Jan 17 13:55:05 2022
-
 @author: Zion_1956
 """
 from selenium import webdriver
@@ -30,11 +28,13 @@ searchbox.send_keys("신발")
 searchbutton = driver.find_element_by_xpath("//button[@class='button primary-color']")
 searchbutton.click()
 #스크롤 기능
+
 driver.find_element_by_tag_name('body').send_keys(Keys.PAGE_DOWN)
 
 for c in range(0,70):
     driver.find_element_by_tag_name('body').send_keys(Keys.PAGE_DOWN)
     time.sleep(3)
+
 #각 해당 데이터 파싱
 
 columns = ['가격','모델명','모델코드']
@@ -90,7 +90,19 @@ for page in page_urls:
             req.urlretrieve(link, f'./img/{index}.jpg')
         except:
             continue
-df.to_csv("data/vans_data.csv",encoding='utf-8')
+
+
 driver.close()
-
-
+def text_cleaning(text):
+       text = text.replace("원","").replace(',',"").strip()
+       #text.astype()
+       result = int(text)
+       return result
+df.head(10)
+# df 데이터의 price 컬럼을 숫자만 prices2 컬럼에 저장하기
+df["정가"] = df["가격"].apply(lambda x : text_cleaning(str(x)))
+df
+df.to_csv("data/vans_data1.csv",encoding='utf-8')
+del df['가격']
+del df['prices2']
+df
