@@ -15,6 +15,7 @@ import pandas as pd
 from tqdm import tqdm, trange
 from time import sleep
 from datetime import date
+from multiprocessing import Pool
 
 # moduled_nike
 CATEGORY = ['men', 'women', 'kids', 'adult-unisex']
@@ -242,6 +243,19 @@ def save_images(urls, image_path=BASE_DIR + '/image/nike'):
             request_detail(driver, _url, image_path)
 
 
+def save_images_multi(urls, multi=4, image_path=BASE_DIR + '/image/nike'):
+    # 멀티 프로세싱
+    _multi = multi  # 프로세스 수
+    _div, _mod = divmod(len(urls), _multi)
+    # 프로세스 수만큼 쪼개기
+    url_list = [df_adult.url[i * _div:(i + 1) * _div] for i in range(_multi)]
+    url_list[-1] = url_list[-1].append(df_adult.url[(_multi * _div):])
+
+    # 병렬로?
+    pool = Pool(processes=_multi)
+    pool.map(lambda u: save_images(u, image_path), url_list)
+
+
 if __name__ == '__main__':
     df_men = get_df_of('men')
     df_women = get_df_of('women')
@@ -252,11 +266,14 @@ if __name__ == '__main__':
     # 중복 제거
     df_adult.drop_duplicates()
 
-    # 이미지 저장하기
-    save_images(df_adult.url, image_path=BASE_DIR + '/image/nike')
-
     data_path = BASE_DIR + '/data'
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     today = date.today().strftime('%Y%m%d')[2:]
     df_adult.to_csv(f'{data_path}/nike_{today}.csv', index=False)
+
+    # 단일 프로세싱
+    # 이미지 저장하기
+    # save_images(df_adult.url, image_path=BASE_DIR + '/image/nike')
+    save_images_multi(df_adult.url, multi=4, image_path=BASE_DIR + '/image/nike')
+
