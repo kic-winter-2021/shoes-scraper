@@ -222,11 +222,18 @@ def request_detail(driver, detail_url, image_path=BASE_DIR+'/image/nike'):
     driver.get(URL_BASE + 'kr/ko_kr' + detail_url)
     if driver.current_url == ACCESS_ERROR_URL:
         raise NikeAccessError("Access denied." + driver.current_url)
+
+    # 대기
+    # WebDriverWait(driver, timeout=0).until(lambda d: d.find_element(By.XPATH, '//div[@class="prd_gutter"]'))
     _html = driver.page_source
 
     soup = BeautifulSoup(_html, 'html.parser')
-    div_list = soup.find_all('div', attrs={'class': 'prd-gutter'})
-    img_list = list(map(lambda div: div.find('img').get('src'), div_list))
+    try:
+        div_list = soup.find_all('div', attrs={'class': 'prd-gutter'})
+        img_list = list(map(lambda div: div.find('img').get('src'), div_list))
+    except AttributeError:
+        return
+
     # 파일 경로 체크 및 생성
     # detail_url.split('/')[5] : style name
     _filepath = os.path.join(image_path, detail_url.split('/')[5])
@@ -239,6 +246,8 @@ def request_detail(driver, detail_url, image_path=BASE_DIR+'/image/nike'):
 
 def save_images(urls, image_path=BASE_DIR + '/image/nike'):
     for t, _url in zip(trange(len(urls)), urls):
+        if os.path.exists(image_path + '/' + _url.split('/')[5]):
+            continue
         with webdriver.Chrome(options=headless) as driver:
             request_detail(driver, _url, image_path)
 
@@ -276,4 +285,3 @@ if __name__ == '__main__':
     # 이미지 저장하기
     # save_images(df_adult.url, image_path=BASE_DIR + '/image/nike')
     save_images_multi(df_adult.url, multi=4, image_path=BASE_DIR + '/image/nike')
-
